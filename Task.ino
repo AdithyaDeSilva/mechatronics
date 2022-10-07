@@ -4,11 +4,13 @@
 // Number of steps per output rotation
 const int stepsPerRevolution = 100;
 
-Stepper stepperXAxis(stepsPerRevolution,4,5,6,7);
-Stepper stepperYAxis(stepsPerRevolution,8,9,10,11);
+Stepper stepperXAxis(stepsPerRevolution, 4, 5, 6, 7);
+Stepper stepperYAxis(stepsPerRevolution, 8, 9, 10, 11);
 
 int nextPlace[2] = {0, 0};
 int currentPlace[2] = {0, 0};
+int secondPosition[2] = {0, 0};
+int thirdPosition[2] = {0, 0};
 
 // int positions[3][3][2] = {
 // 	{{1,1},{1,2},{1,3}},
@@ -16,84 +18,95 @@ int currentPlace[2] = {0, 0};
 // 	{{3,1},{3,2},{3,3}}
 // };
 
-
-
-//Takes the destination box number and change the nextPlace array 
-void boxNumber(int number){
-	if (number>9 or number<= 0)
+// Takes the destination box number and change the nextPlace array
+void boxNumber(int number)
+{
+	if (number > 9 or number <= 0)
 	{
 		Serial.println("Invalid number please Enter between 1-9");
 		return;
-	}else {
-    Serial.println(number);
+	}
+	else
+	{
+		Serial.println(number);
 		currentPlace[0] = nextPlace[0];
 		currentPlace[1] = nextPlace[1];
+		secondPosition[0] = nextPlace[0];
 
 		switch (number)
 		{
 		case 1:
+			thirdPosition[0] = 1;
 			nextPlace[0] = 1;
 			nextPlace[1] = 1;
 			break;
 		case 2:
+			thirdPosition[0] = 1;
 			nextPlace[0] = 2;
 			nextPlace[1] = 1;
 			break;
 		case 3:
+			thirdPosition[0] = 1;
 			nextPlace[0] = 3;
 			nextPlace[1] = 1;
 			break;
 		case 4:
+			thirdPosition[0] = 2;
 			nextPlace[0] = 1;
 			nextPlace[1] = 2;
 			break;
 		case 5:
+			thirdPosition[0] = 2;
 			nextPlace[0] = 2;
 			nextPlace[1] = 2;
 			break;
 		case 6:
+			thirdPosition[0] = 2;
 			nextPlace[0] = 3;
 			nextPlace[1] = 2;
 			break;
 		case 7:
+			thirdPosition[0] = 3;
 			nextPlace[0] = 1;
 			nextPlace[1] = 3;
 			break;
 		case 8:
+			thirdPosition[0] = 3;
 			nextPlace[0] = 2;
 			nextPlace[1] = 3;
 			break;
 		case 9:
+			thirdPosition[0] = 3;
 			nextPlace[0] = 3;
 			nextPlace[1] = 3;
 			break;
-		
+
 		default:
+			thirdPosition[0] = 3;
 			nextPlace[0] = 1;
 			nextPlace[1] = 1;
 			break;
 		}
-	}	
+	}
 }
 
-
-//This moves X axis stepper
-// int xAxisMove(int nextPlaceX){
-// 	int xAxisBlocks = nextPlaceX - currentPlace[0];
-// 	if (nextPlaceX < currentPlace[0])
-// 	{
-// 		int distance = currentPlace[0] - nextPlaceX ;
-// 		stepperXAxis.step(-stepsPerRevolution * distance );
-// 	}else {
-// 		int distance = nextPlaceX - currentPlace[0];
-// 		stepperXAxis.step( stepsPerRevolution * distance );
-// 	}
+// This moves X axis stepper
+//  int xAxisMove(int nextPlaceX){
+//  	int xAxisBlocks = nextPlaceX - currentPlace[0];
+//  	if (nextPlaceX < currentPlace[0])
+//  	{
+//  		int distance = currentPlace[0] - nextPlaceX ;
+//  		stepperXAxis.step(-stepsPerRevolution * distance );
+//  	}else {
+//  		int distance = nextPlaceX - currentPlace[0];
+//  		stepperXAxis.step( stepsPerRevolution * distance );
+//  	}
 
 // }
 
 // //This moves Y axis stepper
 // int yAxisMove(int nextPlaceY){
-// 	int yAxisBlocks = nextPlaceY - currentPlace[1]; 
+// 	int yAxisBlocks = nextPlaceY - currentPlace[1];
 // 	if (nextPlaceY >= currentPlace[1])
 // 	{
 // 		return yAxisBlocks;
@@ -102,49 +115,60 @@ void boxNumber(int number){
 // 	}
 // }
 
-// Calculate the distance 
-int moveStepper(int nextPlace, int currentPosition) {
+// Calculate the distance
+int moveStepper(int nextPlace, int currentPosition)
+{
 	return nextPlace - currentPosition;
 }
 
-
-void setup () {
+void setup()
+{
 	Serial.begin(9600);
 	stepperXAxis.setSpeed(500);
 	stepperYAxis.setSpeed(500);
 }
 
-void loop(){
-	if (Serial.available()){
+void loop()
+{
+	if (Serial.available())
+	{
 		Serial.print("Input Box Number:");
 		String reading = Serial.readStringUntil("\n");
-    int s=reading.toInt();
-		
+		int s = reading.toInt();
+
 		Serial.println("");
 		boxNumber(s);
-		// xAxisMove(nextPlace[0]);
-		// yAxisMove(nextPlace[1]);
-		int xDistance = moveStepper(nextPlace[0], currentPlace[0]);
-		int yDistance = moveStepper(nextPlace[1], currentPlace[1]);
-    Serial.println(currentPlace[0]);
-    Serial.println(currentPlace[1]);
-		stepperXAxis.step(xDistance * 2000);
-		stepperYAxis.step(yDistance * 2000);
+
+		for (int i = 0; i < 3; i++)
+		{
+			switch (i)
+			{
+			case 0:
+				int xDistance = moveStepper(secondPosition[1], currentPlace[1]);
+				stepperXAxis.step(xDistance * 2000);
+				break;
+			case 1:
+				int yDistance = moveStepper(thirdPosition[0], secondPosition[0]);
+				stepperYAxis.step(yDistance * 2000);
+				break;
+			case 2:
+				int xDistance = moveStepper(nextPlace[1], thirdPosition[1]);
+				stepperXAxis.step(xDistance * 2000);
+				break;
+
+			default:
+				break;
+			}
+		}
+
+		// int xDistance = moveStepper(nextPlace[0], currentPlace[0]);
+		// int yDistance = moveStepper(nextPlace[1], currentPlace[1]);
+		// Serial.println(currentPlace[0]);
+		// Serial.println(currentPlace[1]);
+		// stepperXAxis.step(xDistance * 2000);
+		// stepperYAxis.step(yDistance * 2000);
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // // Number of steps per output rotation
 // const int stepsPerRevolution = 200;
